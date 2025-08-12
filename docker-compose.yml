@@ -1,0 +1,43 @@
+services:
+  myshop-db:
+    image: mysql:8
+    container_name: myshop-db
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myshopdb
+      MYSQL_USER: myshopuser
+      MYSQL_PASSWORD: mypassword
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - myshop-network
+
+  myshop-app:
+    image: kimahhyun/myshop:latest
+    container_name: myshop-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      myshop-db:
+         condition: service_healthy
+    networks:
+      - myshop-network
+    environment:
+      - KAKAOPAY_ADMIN_KEY=${KAKAOPAY_ADMIN_KEY}
+      - KAKAOPAY_CID=${KAKAOPAY_CID}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID}
+    
+
+volumes:
+  mysql-data:
+
+networks:
+  myshop-network:
